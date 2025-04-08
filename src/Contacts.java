@@ -47,15 +47,8 @@ public class Contacts extends JFrame{
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Handle adding new contact (simple input dialog for now)
-                String nom = JOptionPane.showInputDialog("Entrez le Nom:");
-                String prenom = JOptionPane.showInputDialog("Entrez le Prénom:");
-                String email = JOptionPane.showInputDialog("Entrez l'Email:");
-                String telephone = JOptionPane.showInputDialog("Entrez le Téléphone:");
-                String ville = JOptionPane.showInputDialog("Entrez la Ville:");
-                String categorie = JOptionPane.showInputDialog("Entrez la Catégorie:");
+                new AjouterContact(model);
 
-                // Add the contact to the table
-                model.addRow(new Object[]{nom, prenom, email, telephone, ville, categorie});
             }
         });
 
@@ -65,20 +58,7 @@ public class Contacts extends JFrame{
                 // Handle modifying an existing contact (simple edit of the selected row)
                 int selectedRow = table.getSelectedRow();
                 if (selectedRow != -1) {
-                    String nom = JOptionPane.showInputDialog("Entrez le Nom:", model.getValueAt(selectedRow, 0));
-                    String prenom = JOptionPane.showInputDialog("Entrez le Prénom:", model.getValueAt(selectedRow, 1));
-                    String email = JOptionPane.showInputDialog("Entrez l'Email:", model.getValueAt(selectedRow, 2));
-                    String telephone = JOptionPane.showInputDialog("Entrez le Téléphone:", model.getValueAt(selectedRow, 3));
-                    String ville = JOptionPane.showInputDialog("Entrez la Ville:", model.getValueAt(selectedRow, 4));
-                    String categorie = JOptionPane.showInputDialog("Entrez la Catégorie:", model.getValueAt(selectedRow, 5));
-
-                    // Update the selected row with new values
-                    model.setValueAt(nom, selectedRow, 0);
-                    model.setValueAt(prenom, selectedRow, 1);
-                    model.setValueAt(email, selectedRow, 2);
-                    model.setValueAt(telephone, selectedRow, 3);
-                    model.setValueAt(ville, selectedRow, 4);
-                    model.setValueAt(categorie, selectedRow, 5);
+                    new ModifierContact(model, selectedRow);
                 } else {
                     JOptionPane.showMessageDialog(null, "Sélectionnez une ligne à modifier.");
                 }
