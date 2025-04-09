@@ -81,22 +81,7 @@ public class Contacts extends JFrame{
         searchButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Handle search functionality
-                String searchTerm = JOptionPane.showInputDialog("Entrez le terme de recherche:");
-                boolean found = false;
-                for (int i = 0; i < model.getRowCount(); i++) {
-                    for (int j = 0; j < model.getColumnCount(); j++) {
-                        if (model.getValueAt(i, j).toString().toLowerCase().contains(searchTerm.toLowerCase())) {
-                            table.setRowSelectionInterval(i, i);  // Select the row containing the search term
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (found) break;
-                }
-                if (!found) {
-                    JOptionPane.showMessageDialog(null, "Aucun contact trouvé pour '" + searchTerm + "'");
-                }
+                new RechercheContact(model,table);
             }
         });
 
