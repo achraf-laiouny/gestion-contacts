@@ -3,12 +3,53 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 public class Contacts extends JFrame{
     // Declare the JTable and the model
     private JTable table;
     private DefaultTableModel model;
+    //load data from database
+    public void loadContactsFromDatabase() {
+        String url = "jdbc:mysql://localhost:3306/gestion_contacts?useSSL=false&serverTimezone=UTC";
+        String user = "root";
+        String password = "";
 
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver"); // Optional but safe
+            Connection conn = DriverManager.getConnection(url, user, password);
+
+            String query = "SELECT nom, prenom, email, telephone, ville, categorie FROM contact";
+            PreparedStatement stmt = conn.prepareStatement(query);
+            ResultSet rs = stmt.executeQuery();
+
+            // Clear existing rows before loading
+            model.setRowCount(0);
+
+            while (rs.next()) {
+                Object[] row = {
+                        rs.getString("nom"),
+                        rs.getString("prenom"),
+                        rs.getString("email"),
+                        rs.getString("telephone"),
+                        rs.getString("ville"),
+                        rs.getString("categorie")
+                };
+                model.addRow(row);
+            }
+
+            rs.close();
+            stmt.close();
+            conn.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Erreur lors du chargement des contacts.");
+        }
+    }
     public Contacts() {
         // Characteristiques de Frame
         setTitle("Gestion des Contacts");
@@ -41,6 +82,7 @@ public class Contacts extends JFrame{
         JButton deleteButton = new JButton("Supprimer");
         JButton searchButton = new JButton("Rechercher");
         JButton quitButton = new JButton("Quitter");
+        loadContactsFromDatabase();
 
         // Add button action listeners
         addButton.addActionListener(new ActionListener() {
