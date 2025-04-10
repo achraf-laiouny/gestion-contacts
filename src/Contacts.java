@@ -22,7 +22,7 @@ public class Contacts extends JFrame{
             Class.forName("com.mysql.cj.jdbc.Driver"); // Optional but safe
             Connection conn = DriverManager.getConnection(url, user, password);
 
-            String query = "SELECT nom, prenom, email, telephone, ville, categorie FROM contact";
+            String query = "SELECT nom, prenom, email, telephone, ville, categorie, sexe FROM contact";
             PreparedStatement stmt = conn.prepareStatement(query);
             ResultSet rs = stmt.executeQuery();
 
@@ -36,7 +36,8 @@ public class Contacts extends JFrame{
                         rs.getString("email"),
                         rs.getString("telephone"),
                         rs.getString("ville"),
-                        rs.getString("categorie")
+                        rs.getString("categorie"),
+                        rs.getString("sexe")
                 };
                 model.addRow(row);
             }
@@ -62,7 +63,7 @@ public class Contacts extends JFrame{
         panel.setLayout(new BorderLayout());
 
         // Create column names for the contact table
-        String[] columns = {"Nom", "Prénom", "Email", "Téléphone", "Ville", "Catégorie"};
+        String[] columns = {"Nom", "Prénom", "Email", "Téléphone", "Ville", "Catégorie", "sexe"};
 
         // Initialize the table model with column names
         model = new DefaultTableModel(columns,0);
@@ -98,9 +99,10 @@ public class Contacts extends JFrame{
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Handle modifying an existing contact (simple edit of the selected row)
+                String telValue = (table.getValueAt(table.getSelectedRow(),3)).toString();
                 int selectedRow = table.getSelectedRow();
                 if (selectedRow != -1) {
-                    new ModifierContact(model, selectedRow);
+                    new ModifierContact(model, selectedRow, telValue);
                 } else {
                     JOptionPane.showMessageDialog(null, "Sélectionnez une ligne à modifier.");
                 }
@@ -131,6 +133,7 @@ public class Contacts extends JFrame{
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Handle quitting the application
+                //JOptionPane.showMessageDialog(null, table.getValueAt(table.getSelectedRow(),3));
                 System.exit(0);
             }
         });
