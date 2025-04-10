@@ -16,34 +16,16 @@ public class AjouterContact extends JFrame {
     public static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
-//    public static void addContact(String nom,String prenom, String email, String tel,String ville,String cat) throws SQLException {
-//        String querry = "INSERT INTO CONTACT (nom,prenom,email,telephone,ville,categorie) VALUES (?,?,?,?,?,?)";
-//
-//        try (Connection conn = AjouterContact.getConnection();
-//             PreparedStatement stmt = conn.prepareStatement(querry)){
-//            stmt.setString(1, nom);
-//            stmt.setString(2, prenom);
-//            stmt.setString(3, email);
-//            stmt.setString(4, tel);
-//            stmt.setString(5, ville);
-//            stmt.setString(6, cat);
-//            stmt.executeUpdate();
-//            JOptionPane.showMessageDialog(null, "Contact Ajouté");
-//        }catch (SQLException e){
-//            JOptionPane.showMessageDialog(null,"problem" );
-//
-//        }
-//    }
     public AjouterContact(DefaultTableModel model){
         setTitle("Ajouter un Contact");
         setSize(400, 300);
         setLocationRelativeTo(null);
 
-        JPanel mainPanel = new JPanel(new GridLayout(7, 2,5,5));
+        JPanel mainPanel = new JPanel(new GridLayout(8, 2,5,5));
         mainPanel.setBorder(new EmptyBorder(10,10,10,10));
 
 
-        String[] labels = {"Nom", "Prénom", "Email", "Téléphone", "Ville", "Catégorie"};
+        String[] labels = {"Nom", "Prénom", "Email", "Téléphone", "Ville", "Catégorie", "sexe"};
         JTextField[] fields = new JTextField[labels.length];
 
         for (int i = 0; i < labels.length;i++) {
@@ -64,7 +46,7 @@ public class AjouterContact extends JFrame {
         saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String querry = "INSERT INTO CONTACT (nom,prenom,email,telephone,ville,categorie) VALUES (?,?,?,?,?,?)";
+                String querry = "INSERT INTO CONTACT (nom,prenom,email,telephone,ville,categorie,sexe) VALUES (?,?,?,?,?,?,?)";
 
                 try (Connection conn = AjouterContact.getConnection();
                      PreparedStatement stmt = conn.prepareStatement(querry)){
