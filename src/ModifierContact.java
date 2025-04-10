@@ -28,8 +28,10 @@ public class ModifierContact extends JFrame {
 
         String[] labels = {"Nom", "Prénom", "Email", "Téléphone", "Ville", "Catégorie","sexe"};
         JTextField[] fields = new JTextField[labels.length];
+        JComboBox<String> categorieComboBox = new JComboBox<>(new String[]{"Amis", "Famile", "Travail"});
+        JComboBox<String> sexeComboBox = new JComboBox<>(new String[]{"Male", "Female"});
         if (Row != -1){
-            for (int j = 0; j<labels.length;j++){
+            for (int j = 0; j<labels.length -2 ;j++){
                 mainPanel.add(new JLabel(labels[j]));
                 String value = model.getValueAt(Row, j).toString();
                 if (value == null) {
@@ -38,11 +40,16 @@ public class ModifierContact extends JFrame {
                 fields[j] = new JTextField(value);
                 mainPanel.add(fields[j]);
             }
+            mainPanel.add(new JLabel(labels[5]));
+            mainPanel.add(categorieComboBox);
+            mainPanel.add(new JLabel(labels[6]));
+            mainPanel.add(sexeComboBox);
         }else {
             JOptionPane.showMessageDialog(this, "Aucune ligne sélectionnée.");
             dispose();
         }
-
+        categorieComboBox.setSelectedItem(model.getValueAt(Row,5).toString());
+        sexeComboBox.setSelectedItem(model.getValueAt(Row,6));
 
         JButton saveButton = new JButton("Enregistrer");
         JButton cancelButton = new JButton("Annuler");
@@ -58,15 +65,20 @@ public class ModifierContact extends JFrame {
                         " sexe = ? WHERE telephone = ?";
                 try (Connection conn = AjouterContact.getConnection();
                      PreparedStatement stmt = conn.prepareStatement(query)){
-                    Object[] rowData = new Object[labels.length];
-                    for (int i = 0; i < fields.length; i++) {
+                    for (int i = 0; i < fields.length -2; i++) {
                         stmt.setString(i + 1, fields[i].getText());
                     }
+                    stmt.setString(6,(categorieComboBox.getSelectedItem()).toString());
+                    stmt.setString(7,(sexeComboBox.getSelectedItem()).toString());
                     stmt.setString(8,tel);
                     stmt.executeUpdate();
-                    for (int i = 0; i < fields.length; i++) {
+
+                    for (int i = 0; i < fields.length - 2; i++) {
                         model.setValueAt(fields[i].getText(), Row, i);  // Update the model with the new values
                     }
+
+                    model.setValueAt(categorieComboBox.getSelectedItem().toString(), Row, 5); // Update "Catégorie"
+                    model.setValueAt(sexeComboBox.getSelectedItem().toString(), Row, 6);
                     dispose(); // close window
 
                     JOptionPane.showMessageDialog(null, "Contact Modifié");
