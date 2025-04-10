@@ -27,12 +27,18 @@ public class AjouterContact extends JFrame {
 
         String[] labels = {"Nom", "Prénom", "Email", "Téléphone", "Ville", "Catégorie", "sexe"};
         JTextField[] fields = new JTextField[labels.length];
+        JComboBox<String> categorieComboBox = new JComboBox<>(new String[]{"Amis", "Famile", "Travail"});
+        JComboBox<String> sexeComboBox = new JComboBox<>(new String[]{"Male", "Female"});
 
-        for (int i = 0; i < labels.length;i++) {
+        for (int i = 0; i < labels.length -2;i++) {
             mainPanel.add(new JLabel(labels[i]));
             fields[i] = new JTextField();
             mainPanel.add(fields[i]);
         }
+        mainPanel.add(new JLabel(labels[5]));
+        mainPanel.add(categorieComboBox);
+        mainPanel.add(new JLabel(labels[6]));
+        mainPanel.add(sexeComboBox);
 
         JButton saveButton = new JButton("Enregistrer");
         JButton cancelButton = new JButton("Annuler");
@@ -50,15 +56,24 @@ public class AjouterContact extends JFrame {
 
                 try (Connection conn = AjouterContact.getConnection();
                      PreparedStatement stmt = conn.prepareStatement(querry)){
-                    Object[] rowData = new Object[labels.length];
-                    for (int i = 0; i < fields.length; i++) {
-                        stmt.setString(i + 1, fields[i].getText());
-                        rowData[i] = fields[i].getText();
+                    for (int i = 0; i < fields.length - 2; i++) {
+                            stmt.setString(i + 1, fields[i].getText());
                     }
-                    model.addRow(rowData);
-                    dispose(); // close window
+                    stmt.setString(6,(categorieComboBox.getSelectedItem()).toString());
+                    stmt.setString(7,(sexeComboBox.getSelectedItem()).toString());
+
                     stmt.executeUpdate();
+
+                    Object[] newRow = new Object[labels.length];
+                    for (int i = 0; i < fields.length -2 ; i++) {
+                        newRow[i] = fields[i].getText();
+                    }
+                    newRow[5] = categorieComboBox.getSelectedItem().toString();
+                    newRow[6] = sexeComboBox.getSelectedItem().toString();
+                    model.addRow(newRow);
+                    dispose();
                     JOptionPane.showMessageDialog(null, "Contact Ajouté");
+                     // close window
                 }catch (SQLException ex){
                     ex.printStackTrace(); // 👈 shows full error in console
                     JOptionPane.showMessageDialog(null, "Erreur lors de l'ajout du contact:\n" + ex.getMessage());

@@ -113,11 +113,24 @@ public class Contacts extends JFrame{
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Handle deleting a selected contact
+                Object[] options = {"Confirmer", "Annuler"};
                 int selectedRow = table.getSelectedRow();
                 if (selectedRow != -1) {
-                    model.removeRow(selectedRow);
+                    // Ask for confirmation before deleting
+                    int confirmation = JOptionPane.showConfirmDialog(
+                            null,
+                            "Êtes-vous sûr de vouloir supprimer ce contact ?",
+                            "Confirmer la suppression",
+                            JOptionPane.DEFAULT_OPTION
+                    );
+
+                    if (confirmation == JOptionPane.YES_OPTION) {
+                        // If user confirms, remove the row from the table
+                        model.removeRow(selectedRow);
+                        JOptionPane.showMessageDialog(null, "Contact supprimé avec succès.");
+                    }
                 } else {
-                    JOptionPane.showMessageDialog(null, "Sélectionnez une ligne à supprimer.");
+                    JOptionPane.showMessageDialog(null, "Sélectionnez un contact à supprimer.");
                 }
             }
         });
