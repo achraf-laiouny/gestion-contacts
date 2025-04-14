@@ -22,7 +22,24 @@ public class Contacts extends JFrame{
             Class.forName("com.mysql.cj.jdbc.Driver"); // Optional but safe
             Connection conn = DriverManager.getConnection(url, user, password);
 
-            String query = "SELECT nom, prenom, email, telephone, ville, categorie, sexe FROM contact";
+            String query = "SELECT \n" +
+                    "    c.id,\n" +
+                    "    c.nom,\n" +
+                    "    c.prenom,\n" +
+                    "    c.libelle,\n" +
+                    "    c.telPerso,\n" +
+                    "    c.telPro,\n" +
+                    "    c.email,\n" +
+                    "    c.sexe,\n" +
+                    "    v.NomVille as 'Ville',\n" +
+                    "    cat.NomCategorie as 'Categorie'\n" +
+                    "FROM \n" +
+                    "    contact c\n" +
+                    "JOIN \n" +
+                    "    Ville v ON c.NumVille = v.NumVille\n" +
+                    "JOIN \n" +
+                    "    Categorie cat ON c.NumCat = cat.NumCat\n"+
+                    "ORDER BY c.id asc;\n";
             PreparedStatement stmt = conn.prepareStatement(query);
             ResultSet rs = stmt.executeQuery();
 
@@ -31,13 +48,16 @@ public class Contacts extends JFrame{
 
             while (rs.next()) {
                 Object[] row = {
+                        rs.getString("id"),
                         rs.getString("nom"),
                         rs.getString("prenom"),
+                        rs.getString("libelle"),
+                        rs.getString("telPerso"),
+                        rs.getString("telPro"),
                         rs.getString("email"),
-                        rs.getString("telephone"),
-                        rs.getString("ville"),
-                        rs.getString("categorie"),
-                        rs.getString("sexe")
+                        rs.getString("sexe"),
+                        rs.getString("Ville"),
+                        rs.getString("Categorie")
                 };
                 model.addRow(row);
             }
@@ -63,7 +83,7 @@ public class Contacts extends JFrame{
         panel.setLayout(new BorderLayout());
 
         // Create column names for the contact table
-        String[] columns = {"Nom", "Prénom", "Email", "Téléphone", "Ville", "Catégorie", "sexe"};
+        String[] columns = {"id", "nom", "prenom", "libelle", "telPerso", "telPro", "email", "sexe","Ville","Categorie"};
 
         // Initialize the table model with column names
         model = new DefaultTableModel(columns,0);
@@ -99,9 +119,10 @@ public class Contacts extends JFrame{
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Handle modifying an existing contact (simple edit of the selected row)
-                String telValue = (table.getValueAt(table.getSelectedRow(),3)).toString();
+
                 int selectedRow = table.getSelectedRow();
                 if (selectedRow != -1) {
+                    String telValue = (table.getValueAt(table.getSelectedRow(),3)).toString();
                     new ModifierContact(model, selectedRow, telValue);
                 } else {
                     JOptionPane.showMessageDialog(null, "Sélectionnez une ligne à modifier.");
