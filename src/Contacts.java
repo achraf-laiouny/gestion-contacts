@@ -122,8 +122,9 @@ public class Contacts extends JFrame{
 
                 int selectedRow = table.getSelectedRow();
                 if (selectedRow != -1) {
-                    String telValue = (table.getValueAt(table.getSelectedRow(),3)).toString();
-                    new ModifierContact(model, selectedRow, telValue);
+                    String telPerso = (table.getValueAt(table.getSelectedRow(),4)).toString();
+                    String telPro = (table.getValueAt(table.getSelectedRow(),5)).toString();
+                    new ModifierContact(model, selectedRow, telPerso,telPro);
                 } else {
                     JOptionPane.showMessageDialog(null, "Sélectionnez une ligne à modifier.");
                 }
