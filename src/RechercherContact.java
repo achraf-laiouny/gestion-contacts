@@ -7,9 +7,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * La classe `RechercherContact` crée une fenêtre pour rechercher des contacts.
+ * La classe `RechercherContact` crée une fenêtre pour rechercher des contacts
+ * avec des correspondances exactes basées sur les cases à cocher sélectionnées.
  */
-public class RechercherContact extends JFrame {
+public class RechercherContact extends JDialog {
 
     private JPanel contentPane;
     private JButton rechercherButton;
@@ -35,9 +36,9 @@ public class RechercherContact extends JFrame {
      * @param fenetreContacts Instance de la fenêtre principale `Contacts`.
      */
     public RechercherContact(JFrame parent, Contacts fenetreContacts) {
-        setTitle("Rechercher des Contacts");
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        super(parent, "Rechercher des Contacts", true);
         this.fenetreContacts = fenetreContacts;
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setBounds(100, 100, 450, 300);
         contentPane = new JPanel();
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -73,12 +74,12 @@ public class RechercherContact extends JFrame {
 
         sexeCheckBox = new JCheckBox("Sexe:");
         champsPanel.add(sexeCheckBox);
-        sexeComboBox = new JComboBox<>(new String[]{"Male", "Female"});
+        sexeComboBox = new JComboBox<>(new String[]{"", "Male", "Female"}); // Ajouter une option vide
         champsPanel.add(sexeComboBox);
 
         categorieCheckBox = new JCheckBox("Catégorie:");
         champsPanel.add(categorieCheckBox);
-        categorieComboBox = new JComboBox<>(new String[]{"Ami", "Famille", "Travail"});
+        categorieComboBox = new JComboBox<>(new String[]{"", "Amis", "Famille", "Travail"}); // Ajouter une option vide
         champsPanel.add(categorieComboBox);
 
         JPanel buttonPane = new JPanel();
@@ -97,14 +98,14 @@ public class RechercherContact extends JFrame {
         rechercherButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                effectuerRecherche(); // Lance la recherche.
+                effectuerRecherche();
             }
         });
 
         annulerButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                dispose(); // Ferme la fenêtre.
+                dispose();
             }
         });
 
@@ -114,43 +115,35 @@ public class RechercherContact extends JFrame {
     }
 
     /**
-     * Collecte les critères de recherche et effectue la recherche.
+     * Collecte les critères de recherche (correspondance exacte) et effectue la recherche.
      */
     private void effectuerRecherche() {
-        Map<String, String> criteres = new HashMap<>(); // Crée une HashMap pour stocker les critères de recherche (clé = nom du champ, valeur = texte saisi/sélectionné).
+        Map<String, String> criteres = new HashMap<>();
 
-        // Vérifie si la case à cocher du nom est sélectionnée et si le champ de texte n'est pas vide.
         if (nomCheckBox.isSelected() && !nomTextField.getText().trim().isEmpty()) {
-            criteres.put("nom", nomTextField.getText().trim()); // Ajoute le nom saisi aux critères.
+            criteres.put("nom", nomTextField.getText().trim());
         }
-        // Vérifie si la case à cocher du prénom est sélectionnée et si le champ de texte n'est pas vide.
         if (prenomCheckBox.isSelected() && !prenomTextField.getText().trim().isEmpty()) {
-            criteres.put("prenom", prenomTextField.getText().trim()); // Ajoute le prénom saisi aux critères.
+            criteres.put("prenom", prenomTextField.getText().trim());
         }
-        // Vérifie si la case à cocher du libellé est sélectionnée et si le champ de texte n'est pas vide.
         if (libelleCheckBox.isSelected() && !libelleTextField.getText().trim().isEmpty()) {
-            criteres.put("libelle", libelleTextField.getText().trim()); // Ajoute le libellé saisi aux critères.
+            criteres.put("libelle", libelleTextField.getText().trim());
         }
-        // Vérifie si la case à cocher de la ville est sélectionnée et si le champ de texte n'est pas vide.
         if (villeCheckBox.isSelected() && !villeTextField.getText().trim().isEmpty()) {
-            criteres.put("Ville", villeTextField.getText().trim()); // Ajoute la ville saisie aux critères.
+            criteres.put("Ville", villeTextField.getText().trim());
         }
-        // Vérifie si la case à cocher du sexe est sélectionnée.
-        if (sexeCheckBox.isSelected()) {
-            criteres.put("sexe", (String) sexeComboBox.getSelectedItem()); // Ajoute le sexe sélectionné aux critères.
+        if (sexeCheckBox.isSelected() && sexeComboBox.getSelectedItem() != null && !((String) sexeComboBox.getSelectedItem()).isEmpty()) {
+            criteres.put("sexe", (String) sexeComboBox.getSelectedItem());
         }
-        // Vérifie si la case à cocher de la catégorie est sélectionnée.
-        if (categorieCheckBox.isSelected()) {
-            criteres.put("Categorie", (String) categorieComboBox.getSelectedItem()); // Ajoute la catégorie sélectionnée aux critères.
+        if (categorieCheckBox.isSelected() && categorieComboBox.getSelectedItem() != null && !((String) categorieComboBox.getSelectedItem()).isEmpty()) {
+            criteres.put("Categorie", (String) categorieComboBox.getSelectedItem());
         }
 
-        // Vérifie si au moins un critère de recherche a été sélectionné.
         if (!criteres.isEmpty()) {
-            fenetreContacts.rechercherContacts(criteres); // Appelle la méthode de recherche dans la fenêtre `Contacts` en passant les critères.
+            fenetreContacts.rechercherContactsExact(criteres); // Appelle la méthode de recherche exacte.
         } else {
-            // Affiche un message informant l'utilisateur de sélectionner au moins un critère de recherche.
             JOptionPane.showMessageDialog(this, "Veuillez sélectionner au moins un critère de recherche.", "Information", JOptionPane.INFORMATION_MESSAGE);
         }
-        dispose(); // Ferme la fenêtre de recherche après avoir tenté d'effectuer la recherche.
+        dispose();
     }
 }
