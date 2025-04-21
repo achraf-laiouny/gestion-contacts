@@ -7,150 +7,255 @@ import java.awt.event.ActionListener;
 import java.sql.*;
 import java.util.HashMap;
 
+/**
+ * La classe `ModifierContact` permet de modifier les informations d'un contact existant.
+ * Elle affiche un formulaire pré-rempli avec les données du contact sélectionné
+ * et interagit avec la base de données pour enregistrer les modifications.
+ */
 public class ModifierContact extends JFrame {
-    private static final String URL = "jdbc:mysql://localhost:3306/gestion_contacts?useSSL=false&serverTimezone=UTC";
-    private static final String USER = "root";
-    private static final String PASSWORD = "";
+
+    private JTextField nomField;
+    private JTextField prenomField;
+    private JTextField libelleField;
+    private JTextField telPersoField;
+    private JTextField telProField;
+    private JTextField emailField;
+    private JComboBox<String> sexeComboBox;
+    private JComboBox<String> villeComboBox;
+    private JComboBox<String> categorieComboBox;
+    private DefaultTableModel model;
+    private int selectedRow;
+    private int contactId;
     private HashMap<String, Integer> villesMap = new HashMap<>();
     private HashMap<String, Integer> categoriesMap = new HashMap<>();
 
-    public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
+    /**
+     * Méthode pour établir une connexion à la base de données.
+     * @return Une instance de `Connection`.
+     * @throws SQLException en cas d'erreur de connexion.
+     */
+    private Connection getConnection() throws SQLException {
+        String url = "jdbc:mysql://localhost:3306/gestion_contacts?useSSL=false&serverTimezone=UTC";
+        String user = "root";
+        String password = "";
+        return DriverManager.getConnection(url, user, password);
     }
-    private void loadDataIntoComboBox(JComboBox<String> comboBox, String tableName, String nameColumn, String idColumn, HashMap<String, Integer> map) {
+
+    /**
+     * Méthode pour charger les villes depuis la base de données dans la JComboBox.
+     */
+    private void loadVilles() {
+        villeComboBox.removeAllItems();
+        villesMap.clear();
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT " + idColumn + ", " + nameColumn + " FROM " + tableName)) {
-
+             ResultSet rs = stmt.executeQuery("SELECT NumVille, NomVille FROM Ville")) {
             while (rs.next()) {
-                int id = rs.getInt(idColumn);
-                String name = rs.getString(nameColumn);
-                comboBox.addItem(name);
-                map.put(name, id);
+                int id = rs.getInt("NumVille");
+                String nomVille = rs.getString("NomVille");
+                villeComboBox.addItem(nomVille);
+                villesMap.put(nomVille, id);
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Erreur lors du chargement des données depuis " + tableName);
+            JOptionPane.showMessageDialog(this, "Erreur lors du chargement des villes.");
         }
     }
-    public ModifierContact(DefaultTableModel model, int Row, String telperso, String telpro){
-        setTitle("Modifier un Contact");
-        setSize(400,400);
-        setLocationRelativeTo(null);
-        setVisible(true);
 
-        JPanel mainPanel = new JPanel(new GridLayout(10,2,5,5));
-        mainPanel.setBorder(new EmptyBorder(15,15,15,15));
-
-        String[] labels = {"nom", "prenom", "libelle", "telPerso", "telPro", "email", "sexe","Ville","Categorie"};
-        JTextField[] fields = new JTextField[labels.length];
-
-        JComboBox<String> VilleCombobox = new JComboBox<>();
-        JComboBox<String> categorieComboBox = new JComboBox<>();
-
-        JComboBox<String> sexeComboBox = new JComboBox<>(new String[]{"Male", "Female"});
-        loadDataIntoComboBox(VilleCombobox,"Ville", "NomVille", "NumVille",villesMap);
-        loadDataIntoComboBox(categorieComboBox,"Categorie", "NomCategorie", "NumCat",categoriesMap);
-        if (Row != -1){
-            for (int j = 0; j<labels.length -3 ;j++){
-                mainPanel.add(new JLabel(labels[j]));
-                String value = model.getValueAt(Row, j+1).toString();
-                if (value == null) {
-                    value = "";
-                }
-                fields[j] = new JTextField(value);
-                mainPanel.add(fields[j]);
+    /**
+     * Méthode pour charger les catégories depuis la base de données dans la JComboBox.
+     */
+    private void loadCategories() {
+        categorieComboBox.removeAllItems();
+        categoriesMap.clear();
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT NumCat, NomCategorie FROM Categorie")) {
+            while (rs.next()) {
+                int id = rs.getInt("NumCat");
+                String nomCategorie = rs.getString("NomCategorie");
+                categorieComboBox.addItem(nomCategorie);
+                categoriesMap.put(nomCategorie, id);
             }
-            mainPanel.add(new JLabel(labels[6]));
-            mainPanel.add(sexeComboBox);
-            mainPanel.add(new JLabel(labels[7]));
-            mainPanel.add(VilleCombobox);
-            mainPanel.add(new JLabel(labels[8]));
-            mainPanel.add(categorieComboBox);
-
-        }else {
-            JOptionPane.showMessageDialog(this, "Aucune ligne sélectionnée.");
-            dispose();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Erreur lors du chargement des catégories.");
         }
+    }
 
-        sexeComboBox.setSelectedItem(model.getValueAt(Row,7));
-        VilleCombobox.setSelectedItem(model.getValueAt(Row,8));
-        categorieComboBox.setSelectedItem(model.getValueAt(Row,9).toString());
+    /**
+     * Constructeur de la classe `ModifierContact`.
+     * @param model Le modèle de table contenant les contacts.
+     * @param selectedRow L'index de la ligne sélectionnée dans le tableau.
+     * @param contactId L'ID du contact à modifier.
+     */
+    public ModifierContact(DefaultTableModel model, int selectedRow, int contactId) {
+        this.model = model;
+        this.selectedRow = selectedRow;
+        this.contactId = contactId;
 
-        JButton saveButton = new JButton("Enregistrer");
-        JButton cancelButton = new JButton("Annuler");
-        mainPanel.add(saveButton);
-        mainPanel.add(cancelButton);
+        setTitle("Modifier le Contact");
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setBounds(100, 100, 450, 350); // Augmentation de la hauteur pour les ComboBox
+        JPanel contentPane = new JPanel();
+        contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+        setContentPane(contentPane);
+        contentPane.setLayout(new GridLayout(0, 2, 5, 5));
 
-        add(mainPanel);
+        // Récupération des données du contact à modifier à partir du modèle de table.
+        String nom = (String) model.getValueAt(selectedRow, 1);
+        String prenom = (String) model.getValueAt(selectedRow, 2);
+        String libelle = (String) model.getValueAt(selectedRow, 3);
+        String telPerso = (String) model.getValueAt(selectedRow, 4);
+        String telPro = (String) model.getValueAt(selectedRow, 5);
+        String email = (String) model.getValueAt(selectedRow, 6);
+        String sexe = (String) model.getValueAt(selectedRow, 7);
+        String ville = (String) model.getValueAt(selectedRow, 8);
+        String categorie = (String) model.getValueAt(selectedRow, 9);
 
-        saveButton.addActionListener(new ActionListener() {
-            @Override
+        // Création et ajout des labels et des champs de saisie pour chaque champ du contact.
+        JLabel nomLabel = new JLabel("Nom:");
+        contentPane.add(nomLabel);
+        nomField = new JTextField(nom);
+        contentPane.add(nomField);
+        nomField.setColumns(10);
+
+        JLabel prenomLabel = new JLabel("Prénom:");
+        contentPane.add(prenomLabel);
+        prenomField = new JTextField(prenom);
+        contentPane.add(prenomField);
+        prenomField.setColumns(10);
+
+        JLabel libelleLabel = new JLabel("Libellé:");
+        contentPane.add(libelleLabel);
+        libelleField = new JTextField(libelle);
+        contentPane.add(libelleField);
+        libelleField.setColumns(10);
+
+        JLabel telPersoLabel = new JLabel("Téléphone Perso:");
+        contentPane.add(telPersoLabel);
+        telPersoField = new JTextField(telPerso);
+        contentPane.add(telPersoField);
+        telPersoField.setColumns(10);
+
+        JLabel telProLabel = new JLabel("Téléphone Pro:");
+        contentPane.add(telProLabel);
+        telProField = new JTextField(telPro);
+        contentPane.add(telProField);
+        telProField.setColumns(10);
+
+        JLabel emailLabel = new JLabel("Email:");
+        contentPane.add(emailLabel);
+        emailField = new JTextField(email);
+        contentPane.add(emailField);
+        emailField.setColumns(10);
+
+        JLabel sexeLabel = new JLabel("Sexe:");
+        contentPane.add(sexeLabel);
+        sexeComboBox = new JComboBox<>(new String[]{"Male", "Female"});
+        sexeComboBox.setSelectedItem(sexe);
+        contentPane.add(sexeComboBox);
+
+        JLabel villeLabel = new JLabel("Ville:");
+        contentPane.add(villeLabel);
+        villeComboBox = new JComboBox<>();
+        loadVilles();
+        villeComboBox.setSelectedItem(ville);
+        contentPane.add(villeComboBox);
+
+        JLabel categorieLabel = new JLabel("Catégorie:");
+        contentPane.add(categorieLabel);
+        categorieComboBox = new JComboBox<>();
+        loadCategories();
+        categorieComboBox.setSelectedItem(categorie);
+        contentPane.add(categorieComboBox);
+
+        JButton enregistrerButton = new JButton("Enregistrer");
+        enregistrerButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                String query = "UPDATE contact SET nom = ?, prenom = ? ,libelle = ?, telPerso = ?, telPro = ?, email = ?," +
-                        " sexe = ?, NumVille = ?, NumCat = ? WHERE telPerso = ? AND telPro = ?";
-                try (Connection conn = AjouterContact.getConnection();
-                     PreparedStatement stmt = conn.prepareStatement(query)){
-                    for (int i = 0; i < fields.length -3; i++) {
-                        stmt.setString(i + 1, fields[i].getText());
-                    }
-                    stmt.setString(7,(sexeComboBox.getSelectedItem()).toString());
-                    String selectedVille = VilleCombobox.getSelectedItem().toString();
-                    String selectedCategorie = categorieComboBox.getSelectedItem().toString();
-
-                    int villeId = villesMap.get(selectedVille);
-                    int categorieId = categoriesMap.get(selectedCategorie);
-
-                    stmt.setInt(8, villeId);
-                    stmt.setInt(9, categorieId);
-
-                    stmt.setString(10,telperso);
-                    stmt.setString(11,telpro);
-                    stmt.executeUpdate();
-
-                    Object[] newRow = new Object[labels.length+1];
-
-                    int rowCount = 0;
-
-                    String rep = "SELECT COUNT(*) FROM contact";
-
-                    try (Connection con = getConnection();
-                         Statement stmts = con.createStatement();
-                         ResultSet rs = stmts.executeQuery(rep)) {
-
-                        if (rs.next()) {
-                            rowCount = rs.getInt(1); // getInt(1) gets the first column from the result
-                        }
-
-                    } catch (SQLException ex) {
-                        ex.printStackTrace();
-                    }
-                    newRow[0] = rowCount;
-                    newRow[1] = fields[0].getText(); // nom
-                    newRow[2] = fields[1].getText(); // prenom
-                    newRow[3] = fields[2].getText(); // libelle
-                    newRow[4] = fields[3].getText(); // telPerso
-                    newRow[5] = fields[4].getText(); // telPro
-                    newRow[6] = fields[5].getText(); // email
-                    newRow[7] = sexeComboBox.getSelectedItem().toString(); // sexe
-                    newRow[8] = VilleCombobox.getSelectedItem().toString(); // ville name
-                    newRow[9] = categorieComboBox.getSelectedItem().toString(); // categorie name
-
-                    model.setValueAt(sexeComboBox.getSelectedItem().toString(), Row, 7);
-                    model.setValueAt(VilleCombobox.getSelectedItem().toString(),Row,8);
-                    model.setValueAt(categorieComboBox.getSelectedItem().toString(), Row, 9); // Update "Catégorie"
-
-                    dispose(); // close window
-
-                    JOptionPane.showMessageDialog(null, "Contact Modifié");
-                }catch (SQLException ex){
-                    ex.printStackTrace(); // 👈 shows full error in console
-                    JOptionPane.showMessageDialog(null, "Erreur lors de l'ajout du contact:\n" + ex.getMessage());
-                }
-
+                modifierContactDansBaseDeDonnees();
             }
         });
-        cancelButton.addActionListener(e -> dispose());
+        contentPane.add(enregistrerButton);
 
+        JButton annulerButton = new JButton("Annuler");
+        annulerButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                dispose(); // Ferme la fenêtre de modification.
+            }
+        });
+        contentPane.add(annulerButton);
+
+        pack(); // Ajuste la taille de la fenêtre à ses composants.
+        setLocationRelativeTo(null); // Centre la fenêtre à l'écran.
+        setVisible(true); // Rend la fenêtre visible.
+    }
+
+    /**
+     * Méthode pour modifier le contact dans la base de données.
+     */
+    private void modifierContactDansBaseDeDonnees() {
+        String nom = nomField.getText();
+        String prenom = prenomField.getText();
+        String libelle = libelleField.getText();
+        String telPerso = telPersoField.getText();
+        String telPro = telProField.getText();
+        String email = emailField.getText();
+        String sexe = (String) sexeComboBox.getSelectedItem();
+        String villeNom = (String) villeComboBox.getSelectedItem();
+        String categorieNom = (String) categorieComboBox.getSelectedItem();
+
+        if (villeNom == null || categorieNom == null) {
+            JOptionPane.showMessageDialog(this, "Veuillez sélectionner une ville et une catégorie.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        Integer villeId = villesMap.get(villeNom);
+        Integer categorieId = categoriesMap.get(categorieNom);
+
+        if (villeId == null || categorieId == null) {
+            JOptionPane.showMessageDialog(this, "Erreur: Ville ou catégorie non trouvée.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String updateQuery = "UPDATE contact SET nom = ?, prenom = ?, libelle = ?, telPerso = ?, telPro = ?, email = ?, sexe = ?, NumVille = ?, NumCat = ? WHERE id = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(updateQuery)) {
+
+            pstmt.setString(1, nom);
+            pstmt.setString(2, prenom);
+            pstmt.setString(3, libelle);
+            pstmt.setString(4, telPerso);
+            pstmt.setString(5, telPro);
+            pstmt.setString(6, email);
+            pstmt.setString(7, sexe);
+            pstmt.setInt(8, villeId);
+            pstmt.setInt(9, categorieId);
+            pstmt.setInt(10, contactId);
+
+            int affectedRows = pstmt.executeUpdate();
+
+            if (affectedRows > 0) {
+                JOptionPane.showMessageDialog(this, "Contact modifié avec succès.", "Succès", JOptionPane.INFORMATION_MESSAGE);
+                // Mise à jour de la ligne dans le modèle de table
+                model.setValueAt(nom, selectedRow, 1);
+                model.setValueAt(prenom, selectedRow, 2);
+                model.setValueAt(libelle, selectedRow, 3);
+                model.setValueAt(telPerso, selectedRow, 4);
+                model.setValueAt(telPro, selectedRow, 5);
+                model.setValueAt(email, selectedRow, 6);
+                model.setValueAt(sexe, selectedRow, 7);
+                model.setValueAt(villeNom, selectedRow, 8);
+                model.setValueAt(categorieNom, selectedRow, 9);
+                dispose(); // Ferme la fenêtre après la modification réussie.
+            } else {
+                JOptionPane.showMessageDialog(this, "Erreur lors de la modification du contact.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Erreur de base de données lors de la modification du contact.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
     }
 }
