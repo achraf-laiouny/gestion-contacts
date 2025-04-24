@@ -11,13 +11,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 
-/**
- * La classe `Contacts` représente la fenêtre principale de l'application
- * de gestion des contacts. Elle affiche une liste de contacts provenant
- * d'une base de données et permet d'effectuer des opérations telles que
- * l'ajout, la modification, la suppression et la recherche de contacts.
- * Elle hérite de `JFrame`, ce qui en fait une fenêtre graphique.
- */
 public class Contacts extends JFrame {
     private JTable table;
     private NonEditableTableModel model;
@@ -26,7 +19,6 @@ public class Contacts extends JFrame {
         public NonEditableTableModel(Object[] columnNames, int rowCount) {
             super(columnNames, rowCount);
         }
-
         @Override
         public boolean isCellEditable(int row, int column) {
             return false;
@@ -34,33 +26,26 @@ public class Contacts extends JFrame {
     }
 
     private Connection getConnection() throws SQLException {
-        String url = "jdbc:mysql://localhost:3306/gestion_contacts?useSSL=false&serverTimezone=UTC";
-        String user = "root";
-        String password = "";
-        return DriverManager.getConnection(url, user, password);
+        return DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/gestion_contacts?useSSL=false&serverTimezone=UTC", "root", "");
     }
 
     public void loadContactsFromDatabase() {
-        String query = "SELECT c.id, c.nom, c.prenom, c.libelle, c.telPerso, c.telPro, c.email, c.sexe, v.NomVille AS Ville, cat.NomCategorie AS Categorie FROM contact c JOIN Ville v ON c.NumVille = v.NumVille JOIN Categorie cat ON c.NumCat = cat.NumCat ORDER BY c.id ASC";
+        String query = "SELECT c.id, c.nom, c.prenom, c.libelle, c.telPerso, c.telPro, c.email, c.sexe, " +
+                "v.NomVille AS Ville, cat.NomCategorie AS Categorie FROM contact c " +
+                "JOIN Ville v ON c.NumVille = v.NumVille " +
+                "JOIN Categorie cat ON c.NumCat = cat.NumCat ORDER BY c.id ASC";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query);
              ResultSet rs = stmt.executeQuery()) {
 
             model.setRowCount(0);
             while (rs.next()) {
-                Object[] row = {
-                        rs.getString("id"),
-                        rs.getString("nom"),
-                        rs.getString("prenom"),
-                        rs.getString("libelle"),
-                        rs.getString("telPerso"),
-                        rs.getString("telPro"),
-                        rs.getString("email"),
-                        rs.getString("sexe"),
-                        rs.getString("Ville"),
-                        rs.getString("Categorie")
-                };
-                model.addRow(row);
+                model.addRow(new Object[] {
+                        rs.getString("id"), rs.getString("nom"), rs.getString("prenom"), rs.getString("libelle"),
+                        rs.getString("telPerso"), rs.getString("telPro"), rs.getString("email"),
+                        rs.getString("sexe"), rs.getString("Ville"), rs.getString("Categorie")
+                });
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -69,22 +54,18 @@ public class Contacts extends JFrame {
     }
 
     public void rechercherContactsExact(Map<String, String> criteres) {
-        String url = "jdbc:mysql://localhost:3306/gestion_contacts?useSSL=false&serverTimezone=UTC";
-        String user = "root";
-        String password = "";
-        StringBuilder query = new StringBuilder("SELECT c.id, c.nom, c.prenom, c.libelle, c.telPerso, c.telPro, c.email, c.sexe, v.NomVille AS Ville, cat.NomCategorie AS Categorie FROM contact c JOIN Ville v ON c.NumVille = v.NumVille JOIN Categorie cat ON c.NumCat = cat.NumCat WHERE ");
+        String baseQuery = "SELECT c.id, c.nom, c.prenom, c.libelle, c.telPerso, c.telPro, c.email, c.sexe, " +
+                "v.NomVille AS Ville, cat.NomCategorie AS Categorie FROM contact c " +
+                "JOIN Ville v ON c.NumVille = v.NumVille JOIN Categorie cat ON c.NumCat = cat.NumCat WHERE ";
+        StringBuilder query = new StringBuilder(baseQuery);
         java.util.List<String> conditions = new java.util.ArrayList<>();
 
         for (Map.Entry<String, String> entry : criteres.entrySet()) {
-            String cle = entry.getKey();
-            String valeur = entry.getValue();
-            if (!valeur.isEmpty()) {
-                if (cle.equals("Categorie")) {
-                    conditions.add("cat.NomCategorie = ?"); // Cibler la colonne NomCategorie de la table Categorie
-                } else if (cle.equals("Ville")) {
-                    conditions.add("v.NomVille = ?"); // Cibler la colonne NomVille de la table Ville
-                } else {
-                    conditions.add("c." + cle + " = ?"); // Cibler les colonnes de la table contact
+            if (!entry.getValue().isEmpty()) {
+                switch (entry.getKey()) {
+                    case "Categorie": conditions.add("cat.NomCategorie = ?"); break;
+                    case "Ville": conditions.add("v.NomVille = ?"); break;
+                    default: conditions.add("c." + entry.getKey() + " = ?"); break;
                 }
             }
         }
@@ -94,105 +75,90 @@ public class Contacts extends JFrame {
             return;
         }
 
-        query.append(String.join(" AND ", conditions));
-        query.append(" ORDER BY c.id ASC");
+        query.append(String.join(" AND ", conditions)).append(" ORDER BY c.id ASC");
 
-        try (Connection conn = DriverManager.getConnection(url, user, password);
+        try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query.toString())) {
 
-            int parameterIndex = 1;
-            for (Map.Entry<String, String> entry : criteres.entrySet()) {
-                String valeur = entry.getValue();
-                if (!valeur.isEmpty()) {
-                    stmt.setString(parameterIndex++, valeur);
-                }
+            int index = 1;
+            for (String key : criteres.keySet()) {
+                String value = criteres.get(key);
+                if (!value.isEmpty()) stmt.setString(index++, value);
             }
 
             ResultSet rs = stmt.executeQuery();
             model.setRowCount(0);
             while (rs.next()) {
-                Object[] row = {
-                        rs.getString("id"),
-                        rs.getString("nom"),
-                        rs.getString("prenom"),
-                        rs.getString("libelle"),
-                        rs.getString("telPerso"),
-                        rs.getString("telPro"),
-                        rs.getString("email"),
-                        rs.getString("sexe"),
-                        rs.getString("Ville"),
-                        rs.getString("Categorie")
-                };
-                model.addRow(row);
+                model.addRow(new Object[] {
+                        rs.getString("id"), rs.getString("nom"), rs.getString("prenom"), rs.getString("libelle"),
+                        rs.getString("telPerso"), rs.getString("telPro"), rs.getString("email"),
+                        rs.getString("sexe"), rs.getString("Ville"), rs.getString("Categorie")
+                });
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Erreur lors de la recherche des contacts.");
         }
     }
 
     public Contacts() {
-        setTitle("Gestion des Contacts");
+        setTitle("\uD83D\uDC64 Gestion des Contacts");
         setSize(1000, 600);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-        JPanel panel = new JPanel(new BorderLayout());
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         String[] columns = {"id", "nom", "prenom", "libelle", "telPerso", "telPro", "email", "sexe", "Ville", "Categorie"};
         model = new NonEditableTableModel(columns, 0);
         table = new JTable(model);
+        table.setRowHeight(25);
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+
         JScrollPane scrollPane = new JScrollPane(table);
-        panel.add(scrollPane, BorderLayout.CENTER);
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
 
-        JPanel buttonPanel = new JPanel(new FlowLayout());
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        String[] buttonLabels = {"Ajouter", "Modifier", "Supprimer", "Rechercher", "Actualiser", "Quitter"};
+        JButton[] buttons = new JButton[buttonLabels.length];
 
-        JButton addButton = new JButton("Ajouter");
-        JButton modifyButton = new JButton("Modifier");
-        JButton deleteButton = new JButton("Supprimer");
-        JButton searchButton = new JButton("Rechercher");
-        JButton quitButton = new JButton("Quitter");
-        JButton restartButton = new JButton("Restart");
+        for (int i = 0; i < buttonLabels.length; i++) {
+            buttons[i] = new JButton(buttonLabels[i]);
+            buttons[i].setFocusPainted(false);
+            buttons[i].setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            buttons[i].setBackground(new Color(60, 130, 200));
+            buttons[i].setForeground(Color.WHITE);
+            buttons[i].setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+            buttonPanel.add(buttons[i]);
+        }
 
+        buttons[0].addActionListener(e -> new AjouterContact(model));
+        buttons[1].addActionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row != -1) {
+                int id = Integer.parseInt(table.getValueAt(row, 0).toString());
+                new ModifierContact(model, row, id);
+            } else {
+                JOptionPane.showMessageDialog(this, "Sélectionnez un contact à modifier.");
+            }
+        });
+        buttons[2].addActionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row != -1) {
+                new SupprimerContact(this, this, table);
+            } else {
+                JOptionPane.showMessageDialog(this, "Sélectionnez un contact à supprimer.");
+            }
+        });
+        buttons[3].addActionListener(e -> new RechercherContact(this, this));
+        buttons[4].addActionListener(e -> loadContactsFromDatabase());
+        buttons[5].addActionListener(e -> System.exit(0));
+
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+        add(mainPanel);
         loadContactsFromDatabase();
-
-        Contacts self = this;
-        addButton.addActionListener(e -> new AjouterContact((DefaultTableModel) table.getModel()));
-
-        modifyButton.addActionListener(e -> {
-            int selectedRow = table.getSelectedRow();
-            if (selectedRow != -1) {
-                int contactId = Integer.parseInt(table.getValueAt(selectedRow, 0).toString());
-                new ModifierContact(model, selectedRow, contactId);
-            } else {
-                JOptionPane.showMessageDialog(null, "Sélectionnez une ligne à modifier.");
-            }
-        });
-
-        deleteButton.addActionListener(e -> {
-            int selectedRow = table.getSelectedRow();
-            if (selectedRow != -1) {
-                new SupprimerContact(Contacts.this, Contacts.this, table);
-            } else {
-                JOptionPane.showMessageDialog(null, "Sélectionnez un contact à supprimer.");
-            }
-        });
-
-        searchButton.addActionListener(e -> new RechercherContact(Contacts.this, Contacts.this));
-
-        quitButton.addActionListener(e -> System.exit(0));
-
-        restartButton.addActionListener(e -> loadContactsFromDatabase());
-
-        buttonPanel.add(addButton);
-        buttonPanel.add(modifyButton);
-        buttonPanel.add(deleteButton);
-        buttonPanel.add(searchButton);
-        buttonPanel.add(restartButton);
-        buttonPanel.add(quitButton);
-
-        panel.add(buttonPanel, BorderLayout.SOUTH);
-        add(panel);
         setVisible(true);
     }
 
