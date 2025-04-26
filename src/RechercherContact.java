@@ -1,5 +1,6 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.basic.BasicComboBoxUI;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -36,63 +37,66 @@ public class RechercherContact extends JDialog {
      * @param fenetreContacts Instance de la fenêtre principale `Contacts`.
      */
     public RechercherContact(JFrame parent, Contacts fenetreContacts) {
-        super(parent, "Rechercher des Contacts", true);
+        super(parent, "🔎 Rechercher un Contact", true);
         this.fenetreContacts = fenetreContacts;
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setBounds(100, 100, 450, 300);
-        contentPane = new JPanel();
-        contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-        setContentPane(contentPane);
-        contentPane.setLayout(new BorderLayout(0, 0));
+        setSize(600, 400);
 
-        JPanel champsPanel = new JPanel(new GridLayout(0, 2, 5, 5));
+        contentPane = new JPanel();
+        contentPane.setBackground(new Color(245, 247, 250));
+        contentPane.setBorder(new EmptyBorder(20, 20, 20, 20));
+        setContentPane(contentPane);
+        contentPane.setLayout(new BorderLayout(20, 20));
+
+        JLabel title = new JLabel("Rechercher un Contact", SwingConstants.CENTER);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        title.setForeground(new Color(44, 62, 80));
+        contentPane.add(title, BorderLayout.NORTH);
+
+        JPanel champsPanel = new JPanel(new GridLayout(0, 2, 10, 15));
+        champsPanel.setOpaque(false);
         contentPane.add(champsPanel, BorderLayout.CENTER);
 
-        nomCheckBox = new JCheckBox("Nom:");
+        Color labelColor = new Color(52, 73, 94);
+
+        nomCheckBox = createCheckBox("Nom:", labelColor);
+        nomTextField = createTextField();
         champsPanel.add(nomCheckBox);
-        nomTextField = new JTextField();
         champsPanel.add(nomTextField);
-        nomTextField.setColumns(10);
 
-        prenomCheckBox = new JCheckBox("Prénom:");
+        prenomCheckBox = createCheckBox("Prénom:", labelColor);
+        prenomTextField = createTextField();
         champsPanel.add(prenomCheckBox);
-        prenomTextField = new JTextField();
         champsPanel.add(prenomTextField);
-        prenomTextField.setColumns(10);
 
-        libelleCheckBox = new JCheckBox("Libellé:");
+        libelleCheckBox = createCheckBox("Libellé:", labelColor);
+        libelleTextField = createTextField();
         champsPanel.add(libelleCheckBox);
-        libelleTextField = new JTextField();
         champsPanel.add(libelleTextField);
-        libelleTextField.setColumns(10);
 
-        villeCheckBox = new JCheckBox("Ville:");
+        villeCheckBox = createCheckBox("Ville:", labelColor);
+        villeTextField = createTextField();
         champsPanel.add(villeCheckBox);
-        villeTextField = new JTextField();
         champsPanel.add(villeTextField);
-        villeTextField.setColumns(10);
 
-        sexeCheckBox = new JCheckBox("Sexe:");
+        sexeCheckBox = createCheckBox("Sexe:", labelColor);
+        sexeComboBox = createComboBox(new String[]{"", "Male", "Female"});
         champsPanel.add(sexeCheckBox);
-        sexeComboBox = new JComboBox<>(new String[]{"", "Male", "Female"}); // Ajouter une option vide
         champsPanel.add(sexeComboBox);
 
-        categorieCheckBox = new JCheckBox("Catégorie:");
+        categorieCheckBox = createCheckBox("Catégorie:", labelColor);
+        categorieComboBox = createComboBox(new String[]{"", "Amis", "Famille", "Travail"});
         champsPanel.add(categorieCheckBox);
-        categorieComboBox = new JComboBox<>(new String[]{"", "Amis", "Famille", "Travail"}); // Ajouter une option vide
         champsPanel.add(categorieComboBox);
 
-        JPanel buttonPane = new JPanel();
-        buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
+        JPanel buttonPane = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPane.setOpaque(false);
         contentPane.add(buttonPane, BorderLayout.SOUTH);
 
-        rechercherButton = new JButton("Rechercher");
-        rechercherButton.setActionCommand("OK");
+        rechercherButton = createButton("🔍 Rechercher", new Color(52, 152, 219));
         buttonPane.add(rechercherButton);
-        getRootPane().setDefaultButton(rechercherButton);
 
-        annulerButton = new JButton("Annuler");
-        annulerButton.setActionCommand("Cancel");
+        annulerButton = createButton("✖ Annuler", new Color(231, 76, 60));
         buttonPane.add(annulerButton);
 
         rechercherButton.addActionListener(new ActionListener() {
@@ -109,9 +113,42 @@ public class RechercherContact extends JDialog {
             }
         });
 
-        pack();
         setLocationRelativeTo(parent);
         setVisible(true);
+    }
+
+    private JCheckBox createCheckBox(String label, Color color) {
+        JCheckBox box = new JCheckBox(label);
+        box.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        box.setBackground(new Color(245, 247, 250));
+        box.setForeground(color);
+        return box;
+    }
+
+    private JTextField createTextField() {
+        JTextField field = new JTextField();
+        field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(189, 195, 199)),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        return field;
+    }
+
+    private JComboBox<String> createComboBox(String[] options) {
+        JComboBox<String> comboBox = new JComboBox<>(options);
+        comboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        comboBox.setUI(new BasicComboBoxUI());
+        return comboBox;
+    }
+
+    private JButton createButton(String text, Color bgColor) {
+        JButton button = new JButton(text);
+        button.setFocusPainted(false);
+        button.setForeground(Color.WHITE);
+        button.setBackground(bgColor);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        button.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        return button;
     }
 
     /**
@@ -140,7 +177,7 @@ public class RechercherContact extends JDialog {
         }
 
         if (!criteres.isEmpty()) {
-            fenetreContacts.rechercherContactsExact(criteres); // Appelle la méthode de recherche exacte.
+            fenetreContacts.rechercherContactsExact(criteres);
         } else {
             JOptionPane.showMessageDialog(this, "Veuillez sélectionner au moins un critère de recherche.", "Information", JOptionPane.INFORMATION_MESSAGE);
         }
